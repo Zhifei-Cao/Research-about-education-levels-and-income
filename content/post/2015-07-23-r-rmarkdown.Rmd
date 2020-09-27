@@ -9,6 +9,14 @@ tags: ["R Markdown", "boxplot", "data analyzation"]
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse= TRUE)
+library(tidyverse)
+#install.packages("devtools")
+#install.packages("colorspace")
+#devtools::install_github("hodgettsp/cesR", force = TRUE)
+library(cesR)
+library(devtools)
+library(labelled)
+get_cescodes()
 ```
 
 # Abstract
@@ -23,24 +31,17 @@ Nonetheless, there exists a special group of people that do not follow the above
 
 In the following part, I will indicate how to form a new dataset from the original dataset and describe my findings in details by using data analyzation and a graph. Moreover, I will indicate some weaknesses for this survey, including the missing data and response error, and introduce methods to avoid the weaknesses to affect data results. At last, I list all my references for this report.
 
-```{r cars}
-summary(cars)
-fit <- lm(dist ~ speed, data = cars)
-fit
+```{r download, warning=FALSE, message=FALSE}
+get_decon()
+#cesR::get_decon()
 ```
 
 # Data discussion
 
-We use the CES dataset, which is called the Canadian Election Study Datasets and surveyed in 2019, by installing the package cesR through the get_decon() function. After the function calling, decon dataset contain 37822 observations of 23 variables.
+We use the CES dataset, which is called the Canadian Election Study Datasets and surveyed in 2019, by installing the package cesR through the get_decon() function. After the function calling, decon dataset contain 37822 observations of 23 variables.We use @citetidyverse, @citedevtools, @citecesR, @citelabelled.
 
-```{r pie, fig.cap='A fancy pie chart.', tidy=FALSE}
-par(mar = c(0, 1, 0, 1))
-pie(
-  c(280, 60, 20),
-  c('Sky', 'Sunny side of pyramid', 'Shady side of pyramid'),
-  col = c('#0292D8', '#F7EA39', '#C4B632'),
-  init.angle = -50, border = NA
-)
+```{r}
+head(decon)
 ```
 
 The variables we focus on are education levels and income. We want to find the relationship between education levels and income. I consider the education levels as the independent variable, while the income is the dependent variable.By filtering out the NA of income, and filtering out the large amount of income that is greater than 1000000 Canadian dollars in 2018, we form a new dataset decon1. Since it is so hard to earn the income greater than 1000000 Canadian dollars and no more than 10 people in Canada can earn money exceeds 1000000 Canadian dollars for each year, we consider these datum of income are not accurate in the survey and remove these extreme values. Then, I select two variables education levels and income that I want to analyze from the dataset decon1, and get another dataset decon2.
@@ -50,7 +51,32 @@ To analyze the reponse variable income, I use summarise function to indicate the
 After the analyzation of income, I group by each education level and compare the mean and median of income in different education levels. Then, we find that: People who are Professional degree or doctorate can earn the mean of income 129607.39 Canadian dollars and median of income 100000 Canadian dollars. People who are Master's degree can earn the mean of income 107422.39 Canadian dollars and median of income 95000 Canadian dollars. People who are Bachelor's degree can earn the mean of income 98172.45 Canadian dollars and median of income 85000 Canadian dollars. People who are from some university can earn the mean of income 80921.33 Canadian dollars and median of income 70000 Canadian dollars. People who are from Completed technical, community college, CEGEP, College Classique can earn the mean of income 80017.69 Canadian dollars and median of income 70000 Canadian dollars. People who do not know or prefer not to answer their education levels can earn the mean of income 72652.22 Canadian dollars and median of income 61000 Canadian dollars. People who are from some technical, community college, CEGEP, College Classique can earn the mean of income 70263.89 Canadian dollars and median of income 60000 Canadian dollars. People who are no schooling can earn the mean of income 66182.67 Canadian dollars and median of income 60500 Canadian dollars. People who are no schooling can earn the mean of income 66182.67 Canadian dollars and median of income 60500 Canadian dollars. People who are from Completed secondary/ high school can earn the mean of income 61736.93 Canadian dollars and median of income 50000 Canadian dollars. People who are from some secondary/ high school can earn the mean of income 54469.90 Canadian dollars and median of income 40000 Canadian dollars. People who are from completed elementary school can earn the mean of income 50858.68 Canadian dollars and median of income 45000 Canadian dollars. People who are from some elementary school can earn the mean of income 42352.65 Canadian dollars and median of income 30000 Canadian dollars.
 
 ```{r}
+decon1 <- 
+  decon %>% 
+  filter(income < 1000000) %>% 
+    filter(!is.na(income))
 
+decon2 <- 
+  decon1 %>% 
+  select(education, income) 
+
+decon2 %>%
+  summarise(income_mean = mean(income), 
+            income_median= median(income), 
+            income_sd = sd(income), 
+            income_var = var(income), 
+            income_min = min(income), 
+            income_max = max(income))
+
+eduaction_group <- 
+  decon2 %>%
+    filter(!is.na(education)) %>%
+      group_by(education)
+summarise(eduaction_group, 
+          mean_income_by_education = mean(income), 
+          median_income_by_education = median(income)) %>%
+  arrange(desc(mean_income_by_education), 
+          desc(median_income_by_education))
 ```
 
 # Graph and graph discussion
@@ -60,7 +86,15 @@ I create boxplots for the relationship between education levels and income. Sinc
 In this graph, we find that people who are professional degree or doctorate have the largest median and IQR of income among all the people with different education levels. The distribution of the boxplot for income of people who are professional degree or doctorate is right skewed. People who are from some elementary schools have the smallest median of income among people in different education levels. The distribution of the boxplot for income of people who are from some elementary schools is right skewed. From boxplots of different education levels, there is few outliers in boxplots of income for people who do not know/ prefer not to answer the education levels, who are from complete elementary school, who are from some elementary school, and who are no schooling. In the opposite phenomenon, there are lots of outliers in boxplots of income for people who are Professional degree or doctorate, who are Master's degree, who are Bachelor's degree, who are from some univeristies, who are from Completed and some technical, community college, CEGEP, College Classique, and who are from completed and some secondary/ high schools.
 
 ```{r}
-
+decon2 %>% 
+  ggplot(aes(x = education, y = income)) + 
+  geom_boxplot() + 
+  labs(title="Boxplot for income in 
+       different education levels", 
+       x ="Education level", 
+       y = "Income (C$)") + 
+  coord_flip() + 
+  theme_bw()
 ```
 
 # Discussion

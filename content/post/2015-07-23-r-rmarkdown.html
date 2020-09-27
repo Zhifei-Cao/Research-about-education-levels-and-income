@@ -1,12 +1,3 @@
----
-title: "The Research about education levels and income"
-author: "Zhifei Cao"
-date: 2020-09-15T21:13:14-05:00
-bibliography: "references.bib"
-categories: ["R"]
-tags: ["R Markdown", "boxplot", "data analyzation"]
----
-
 
 
 <div id="abstract" class="section level1">
@@ -18,48 +9,94 @@ tags: ["R Markdown", "boxplot", "data analyzation"]
 <p>In this report, we want to find the relationship between education levels and income. We choose education level as an explanatory variable and income as a response variable. Then, we will analayze the data contain only two variables (educaation and income) from the large dataset decon. Moreover, we can draw the boxplot of income in each education level. By comparing the data with the drawn graph, we can find the main conclusion for the relationship between these two variables: As the higher education level for Canadian people, the more income they get for a year in 2018.</p>
 <p>Nonetheless, there exists a special group of people that do not follow the aboved conclusion. People who are no schooling have quite low education level among people who take the survey, but these people earn nearly half of income of people who are professional degree or doctorate, and even they earn money higher than the income of people who are from complete and some secondary/ high schools or complete and some elementary schools.</p>
 <p>In the following part, I will indicate how to form a new dataset from the original dataset and describe my findings in details by using data analyzation and a graph. Moreover, I will indicate some weaknesses for this survey, including the missing data and response error, and introduce methods to avoid the weaknesses to affect data results. At last, I list all my references for this report.</p>
-<pre class="r"><code>summary(cars)
-##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00
-fit &lt;- lm(dist ~ speed, data = cars)
-fit
-## 
-## Call:
-## lm(formula = dist ~ speed, data = cars)
-## 
-## Coefficients:
-## (Intercept)        speed  
-##     -17.579        3.932</code></pre>
+<pre class="r"><code>get_decon()
+## TO CITE THIS SURVEY FILE: Stephenson, Laura B; Harell, Allison; Rubenson, Daniel; Loewen, Peter John, 2020, &#39;2019 Canadian Election Study - Online Survey&#39;,
+##            https://doi.org/10.7910/DVN/DUS88V, Harvard Dataverse, V1
+## LINK: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DUS88V
+#cesR::get_decon()</code></pre>
 </div>
 <div id="data-discussion" class="section level1">
 <h1>Data discussion</h1>
-<p>We use the CES dataset, which is called the Canadian Election Study Datasets and surveyed in 2019, by installing the package cesR through the get_decon() function. After the function calling, decon dataset contain 37822 observations of 23 variables.</p>
-<pre class="r"><code>par(mar = c(0, 1, 0, 1))
-pie(
-  c(280, 60, 20),
-  c(&#39;Sky&#39;, &#39;Sunny side of pyramid&#39;, &#39;Shady side of pyramid&#39;),
-  col = c(&#39;#0292D8&#39;, &#39;#F7EA39&#39;, &#39;#C4B632&#39;),
-  init.angle = -50, border = NA
-)</code></pre>
-<div class="figure"><span id="fig:pie"></span>
-<img src="/post/2015-07-23-r-rmarkdown_files/figure-html/pie-1.png" alt="A fancy pie chart." width="672" />
-<p class="caption">
-Figure 1: A fancy pie chart.
-</p>
-</div>
+<p>We use the CES dataset, which is called the Canadian Election Study Datasets and surveyed in 2019, by installing the package cesR through the get_decon() function. After the function calling, decon dataset contain 37822 observations of 23 variables.We use <span class="citation">Wickham et al. (2019)</span>, <span class="citation">Wickham, Hester, and Chang (2020)</span>, <span class="citation">Hodgetts and Alexander (2020)</span>, @</p>
+<pre class="r"><code>head(decon)
+## # A tibble: 6 x 22
+##   ces_code citizenship yob   gender province_territ… education lr    lr_bef
+##   &lt;chr&gt;    &lt;fct&gt;       &lt;fct&gt; &lt;fct&gt;  &lt;fct&gt;            &lt;fct&gt;     &lt;chr&gt; &lt;chr&gt; 
+## 1 ces2019… Canadian c… 1989  A wom… Quebec           Master&#39;s… 2     &lt;NA&gt;  
+## 2 ces2019… Canadian c… 1998  A wom… Quebec           Master&#39;s… 2     &lt;NA&gt;  
+## 3 ces2019… Canadian c… 2000  A wom… Ontario          Some uni… 4     4     
+## 4 ces2019… Canadian c… 1998  A man  Ontario          Some uni… 7     7     
+## 5 ces2019… Canadian c… 2000  A wom… Ontario          Complete… 4     4     
+## 6 ces2019… Canadian c… 1999  A wom… Ontario          Some uni… 4     4     
+## # … with 14 more variables: lr_aft &lt;chr&gt;, religion &lt;fct&gt;,
+## #   sexuality_selected &lt;fct&gt;, sexuality_text &lt;chr&gt;, language_eng &lt;fct&gt;,
+## #   language_fr &lt;fct&gt;, language_abgl &lt;fct&gt;, employment &lt;fct&gt;, income &lt;dbl&gt;,
+## #   income_cat &lt;fct&gt;, marital &lt;fct&gt;, econ_retro &lt;fct&gt;, econ_fed &lt;fct&gt;,
+## #   econ_self &lt;fct&gt;</code></pre>
 <p>The variables we focus on are education levels and income. We want to find the relationship between education levels and income. I consider the education levels as the independent variable, while the income is the dependent variable.By filtering out the NA of income, and filtering out the large amount of income that is greater than 1000000 Canadian dollars in 2018, we form a new dataset decon1. Since it is so hard to earn the income greater than 1000000 Canadian dollars and no more than 10 people in Canada can earn money exceeds 1000000 Canadian dollars for each year, we consider these datum of income are not accurate in the survey and remove these extreme values. Then, I select two variables education levels and income that I want to analyze from the dataset decon1, and get another dataset decon2.</p>
 <p>To analyze the reponse variable income, I use summarise function to indicate the mean, median, standard deviation, minimum and maximum of income by only using one reponse variable income in the dataset decon2. According to calculated results, the mean of income is 84317.88 Canadian dollars, the median of income is 72000 Canadian dollars, standard deviation of income is 68723.6, variance of income is 4722932783, the minimum of income is 0 Canadian dollars and maximum of income is 999000 Canadian dollars.</p>
 <p>After the analyzation of income, I group by each education level and compare the mean and median of income in different education levels. Then, we find that: People who are Professional degree or doctorate can earn the mean of income 129607.39 Canadian dollars and median of income 100000 Canadian dollars. People who are Master’s degree can earn the mean of income 107422.39 Canadian dollars and median of income 95000 Canadian dollars. People who are Bachelor’s degree can earn the mean of income 98172.45 Canadian dollars and median of income 85000 Canadian dollars. People who are from some university can earn the mean of income 80921.33 Canadian dollars and median of income 70000 Canadian dollars. People who are from Completed technical, community college, CEGEP, College Classique can earn the mean of income 80017.69 Canadian dollars and median of income 70000 Canadian dollars. People who do not know or prefer not to answer their education levels can earn the mean of income 72652.22 Canadian dollars and median of income 61000 Canadian dollars. People who are from some technical, community college, CEGEP, College Classique can earn the mean of income 70263.89 Canadian dollars and median of income 60000 Canadian dollars. People who are no schooling can earn the mean of income 66182.67 Canadian dollars and median of income 60500 Canadian dollars. People who are no schooling can earn the mean of income 66182.67 Canadian dollars and median of income 60500 Canadian dollars. People who are from Completed secondary/ high school can earn the mean of income 61736.93 Canadian dollars and median of income 50000 Canadian dollars. People who are from some secondary/ high school can earn the mean of income 54469.90 Canadian dollars and median of income 40000 Canadian dollars. People who are from completed elementary school can earn the mean of income 50858.68 Canadian dollars and median of income 45000 Canadian dollars. People who are from some elementary school can earn the mean of income 42352.65 Canadian dollars and median of income 30000 Canadian dollars.</p>
+<pre class="r"><code>decon1 &lt;- 
+  decon %&gt;% 
+  filter(income &lt; 1000000) %&gt;% 
+    filter(!is.na(income))
+
+decon2 &lt;- 
+  decon1 %&gt;% 
+  select(education, income) 
+
+decon2 %&gt;%
+  summarise(income_mean = mean(income), 
+            income_median= median(income), 
+            income_sd = sd(income), 
+            income_var = var(income), 
+            income_min = min(income), 
+            income_max = max(income))
+## # A tibble: 1 x 6
+##   income_mean income_median income_sd  income_var income_min income_max
+##         &lt;dbl&gt;         &lt;dbl&gt;     &lt;dbl&gt;       &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;
+## 1      84318.         72000    68724. 4722932783.          0     999000
+
+eduaction_group &lt;- 
+  decon2 %&gt;%
+    filter(!is.na(education)) %&gt;%
+      group_by(education)
+summarise(eduaction_group, 
+          mean_income_by_education = mean(income), 
+          median_income_by_education = median(income)) %&gt;%
+  arrange(desc(mean_income_by_education), 
+          desc(median_income_by_education))
+## `summarise()` ungrouping output (override with `.groups` argument)
+## # A tibble: 12 x 3
+##    education                           mean_income_by_educ… median_income_by_ed…
+##    &lt;fct&gt;                                              &lt;dbl&gt;                &lt;dbl&gt;
+##  1 Professional degree or doctorate                 129607.               100000
+##  2 Master&#39;s degree                                  107422.                95000
+##  3 Bachelor&#39;s degree                                 98172.                85000
+##  4 Some university                                   80921.                70000
+##  5 Completed technical, community col…               80018.                70000
+##  6 Don&#39;t know/ Prefer not to answer                  72652.                61000
+##  7 Some technical, community college,…               70264.                60000
+##  8 No schooling                                      66183.                60500
+##  9 Completed secondary/ high school                  61737.                50000
+## 10 Some secondary/ high school                       54470.                40000
+## 11 Completed elementary school                       50859.                45000
+## 12 Some elementary school                            42353.                30000</code></pre>
 </div>
 <div id="graph-and-graph-discussion" class="section level1">
 <h1>Graph and graph discussion</h1>
 <p>I create boxplots for the relationship between education levels and income. Since education level is a categorical variable and income is a numerical variable, we choose boxplots to indicate the income in different education levels.</p>
 <p>In this graph, we find that people who are professional degree or doctorate have the largest median and IQR of income among all the people with different education levels. The distribution of the boxplot for income of people who are professional degree or doctorate is right skewed. People who are from some elementary schools have the smallest median of income among people in different education levels. The distribution of the boxplot for income of people who are from some elementary schools is right skewed. From boxplots of different education levels, there is few outliers in boxplots of income for people who do not know/ prefer not to answer the education levels, who are from complete elementary school, who are from some elementary school, and who are no schooling. In the opposite phenomenon, there are lots of outliers in boxplots of income for people who are Professional degree or doctorate, who are Master’s degree, who are Bachelor’s degree, who are from some univeristies, who are from Completed and some technical, community college, CEGEP, College Classique, and who are from completed and some secondary/ high schools.</p>
+<pre class="r"><code>decon2 %&gt;% 
+  ggplot(aes(x = education, y = income)) + 
+  geom_boxplot() + 
+  labs(title=&quot;Boxplot for income in 
+       different education levels&quot;, 
+       x =&quot;Education level&quot;, 
+       y = &quot;Income (C$)&quot;) + 
+  coord_flip() + 
+  theme_bw()</code></pre>
+<p><img src="2015-07-23-r-rmarkdown_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 </div>
 <div id="discussion" class="section level1">
 <h1>Discussion</h1>
@@ -87,4 +124,15 @@ package version 0.1.0.</li>
 <li>Joseph Larmarange (2020). labelled: Manipulating Labelled Data. R package version 2.6.0.
 <a href="https://CRAN.R-project.org/package=labelled" class="uri">https://CRAN.R-project.org/package=labelled</a></li>
 </ul>
+<div id="refs" class="references">
+<div id="ref-citecesR">
+<p>Hodgetts, Paul A., and Rohan Alexander. 2020. <em>CesR: Access the Ces Datasets a Little Easier.</em></p>
+</div>
+<div id="ref-citetidyverse">
+<p>Wickham, Hadley, Mara Averick, Jennifer Bryan, Winston Chang, Lucy D’Agostino McGowan, Romain François, Garrett Grolemund, et al. 2019. “Welcome to the tidyverse.” <em>Journal of Open Source Software</em> 4 (43): 1686. <a href="https://doi.org/10.21105/joss.01686">https://doi.org/10.21105/joss.01686</a>.</p>
+</div>
+<div id="ref-citedevtools">
+<p>Wickham, Hadley, Jim Hester, and Winston Chang. 2020. <em>Devtools: Tools to Make Developing R Packages Easier</em>.</p>
+</div>
+</div>
 </div>
